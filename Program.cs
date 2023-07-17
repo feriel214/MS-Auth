@@ -1,18 +1,23 @@
 using BCryptNet = BCrypt.Net.BCrypt;
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
 using WebApi.Authorization;
 using WebApi.Entities;
 using WebApi.Helpers;
 using WebApi.Services;
+using WebApi.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+ options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // add services to DI container
 {
     var services = builder.Services;
     var env = builder.Environment;
 
-    services.AddDbContext<DataContext>();
+  //  services.AddDbContext<DataContext>();
     services.AddCors();
     services.AddControllers().AddJsonOptions(x =>
     {
@@ -49,16 +54,10 @@ var app = builder.Build();
 
 // create hardcoded test users in db on startup
 {
-    var testUsers = new List<User>
-    {
-        new User { Id = 1, FirstName = "Admin", LastName = "User", Username = "admin", PasswordHash = BCryptNet.HashPassword("admin"), Role = Role.Admin },
-        new User { Id = 2, FirstName = "Normal", LastName = "User", Username = "user", PasswordHash = BCryptNet.HashPassword("user"), Role = Role.User }
-    };
-
     using var scope = app.Services.CreateScope();
-    var dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-    dataContext.Users.AddRange(testUsers);
-    dataContext.SaveChanges();
+   // var dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+   // dataContext.Users.AddRange(testUsers);
+    //dataContext.SaveChanges();
 }
 
 app.Run("http://localhost:4000");

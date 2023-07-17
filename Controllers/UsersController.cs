@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using WebApi.Authorization;
 using WebApi.Entities;
 using WebApi.Models.Users;
+
 using WebApi.Services;
 
 [Authorize]
@@ -22,12 +23,43 @@ public class UsersController : ControllerBase
     [HttpPost("[action]")]
     public IActionResult Authenticate(AuthenticateRequest model)
     {
-        var response = _userService.Authenticate(model);
-        return Ok(response);
+        try
+        {
+            var response = _userService.Authenticate(model);
+            return StatusCode(StatusCodes.Status201Created, response);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError);
+
+        }
+
     }
 
+
+
+    [AllowAnonymous]
+    [HttpPost("[action]")]
+    public IActionResult Register([FromBody] User model)
+
+    {
+        try
+        {
+            var response = _userService.Register(model);
+            return StatusCode(StatusCodes.Status200OK, response);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError);
+
+        }
+
+    }
+
+
+
     [Authorize(Role.Admin)]
-    [HttpGet]
+    [HttpGet("getAllUsers")]
     public IActionResult GetAll()
     {
         var users = _userService.GetAll();
@@ -45,4 +77,20 @@ public class UsersController : ControllerBase
         var user =  _userService.GetById(id);
         return Ok(user);
     }
+
+
+    /*
+    [HttpPost("{id:int}")]
+    public IActionResult GetByEmail([FromBody] )
+    {
+        // only admins can access other user records
+        var currentUser = (User)HttpContext.Items["User"];
+        if (id != currentUser.Id && currentUser.Role != Role.Admin)
+            return Unauthorized(new { message = "Unauthorized" });
+
+        var user = _userService.GetById(id);
+        return Ok(user);
+    }
+
+    */
 }
